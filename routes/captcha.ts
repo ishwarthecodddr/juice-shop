@@ -5,9 +5,10 @@
 
 import { type Request, type Response, type NextFunction } from 'express'
 import { CaptchaModel } from '../models/captcha'
+import { asyncHandler } from '../lib/asyncHandler'
 
 export function captchas () {
-  return async (req: Request, res: Response) => {
+  return asyncHandler(async (req: Request, res: Response) => {
     const captchaId = req.app.locals.captchaId++
     const operators = ['*', '+', '-']
 
@@ -29,18 +30,14 @@ export function captchas () {
     const captchaInstance = CaptchaModel.build(captcha)
     await captchaInstance.save()
     res.json(captcha)
-  }
+  })
 }
 
-export const verifyCaptcha = () => async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const captcha = await CaptchaModel.findOne({ where: { captchaId: req.body.captchaId } })
-    if ((captcha != null) && req.body.captcha === captcha.answer) {
-      next()
-    } else {
-      res.status(401).send(res.__('Wrong answer to CAPTCHA. Please try again.'))
-    }
-  } catch (error) {
-    next(error)
+export const verifyCaptcha = () => asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+  const captcha = await CaptchaModel.findOne({ where: { captchaId: req.body.captchaId } })
+  if ((captcha != null) && req.body.captcha === captcha.answer) {
+    next()
+  } else {
+    res.status(401).send(res.__('Wrong answer to CAPTCHA. Please try again.'))
   }
-}
+})

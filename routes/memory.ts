@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: MIT
  */
 
-import { type Request, type Response, type NextFunction } from 'express'
+import { type Request, type Response } from 'express'
 import { MemoryModel } from '../models/memory'
 import { UserModel } from '../models/user'
+import { asyncHandler } from '../lib/asyncHandler'
 
 export function addMemory () {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return asyncHandler(async (req: Request, res: Response) => {
     const record = {
       caption: req.body.caption,
       imagePath: 'assets/public/images/uploads/' + req.file?.filename,
@@ -16,12 +17,12 @@ export function addMemory () {
     }
     const memory = await MemoryModel.create(record)
     res.status(200).json({ status: 'success', data: memory })
-  }
+  })
 }
 
 export function getMemories () {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return asyncHandler(async (req: Request, res: Response) => {
     const memories = await MemoryModel.findAll({ include: [UserModel] })
     res.status(200).json({ status: 'success', data: memories })
-  }
+  })
 }

@@ -12,9 +12,10 @@ import * as challengeUtils from '../lib/challengeUtils'
 import { challenges, users } from '../data/datacache'
 import * as security from '../lib/insecurity'
 import { UserModel } from '../models/user'
+import { asyncHandler } from '../lib/asyncHandler'
 
 export function resetPassword () {
-  return async ({ body, connection }: Request, res: Response, next: NextFunction) => {
+  return asyncHandler(async ({ body, connection }: Request, res: Response, next: NextFunction) => {
     const email = body.email
     const answer = body.answer
     const newPassword = body.new
@@ -31,27 +32,23 @@ export function resetPassword () {
       res.status(401).send(res.__('New and repeated password do not match.'))
       return
     }
-    try {
-      const data = await SecurityAnswerModel.findOne({
-        include: [{
-          model: UserModel,
-          where: { email }
-        }]
-      })
-      if ((data != null) && security.hmac(answer) === data.answer) {
-        const user = await UserModel.findByPk(data.UserId)
-        if (user) {
-          const updatedUser = await user.update({ password: newPassword })
-          verifySecurityAnswerChallenges(updatedUser, answer)
-          res.json({ user: updatedUser })
-        }
-      } else {
-        res.status(401).send(res.__('Wrong answer to security question.'))
+    const data = await SecurityAnswerModel.findOne({
+      include: [{
+        model: UserModel,
+        where: { email }
+      }]
+    })
+    if ((data != null) && security.hmac(answer) === data.answer) {
+      const user = await UserModel.findByPk(data.UserId)
+      if (user) {
+        const updatedUser = await user.update({ password: newPassword })
+        verifySecurityAnswerChallenges(updatedUser, answer)
+        res.json({ user: updatedUser })
       }
-    } catch (error) {
-      next(error)
+    } else {
+      res.status(401).send(res.__('Wrong answer to security question.'))
     }
-  }
+  })
 }
 
 function verifySecurityAnswerChallenges (user: UserModel, answer: string) {

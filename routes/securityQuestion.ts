@@ -3,29 +3,26 @@
  * SPDX-License-Identifier: MIT
  */
 
-import { type Request, type Response, type NextFunction } from 'express'
+import { type Request, type Response } from 'express'
 import { SecurityAnswerModel } from '../models/securityAnswer'
 import { UserModel } from '../models/user'
 import { SecurityQuestionModel } from '../models/securityQuestion'
+import { asyncHandler } from '../lib/asyncHandler'
 
 export function securityQuestion () {
-  return async ({ query }: Request, res: Response, next: NextFunction) => {
+  return asyncHandler(async ({ query }: Request, res: Response) => {
     const email = query.email
-    try {
-      const answer = await SecurityAnswerModel.findOne({
-        include: [{
-          model: UserModel,
-          where: { email: email?.toString() }
-        }]
-      })
-      if (answer != null) {
-        const question = await SecurityQuestionModel.findByPk(answer.SecurityQuestionId)
-        res.json({ question })
-      } else {
-        res.json({})
-      }
-    } catch (error) {
-      next(error)
+    const answer = await SecurityAnswerModel.findOne({
+      include: [{
+        model: UserModel,
+        where: { email: email?.toString() }
+      }]
+    })
+    if (answer != null) {
+      const question = await SecurityQuestionModel.findByPk(answer.SecurityQuestionId)
+      res.json({ question })
+    } else {
+      res.json({})
     }
-  }
+  })
 }

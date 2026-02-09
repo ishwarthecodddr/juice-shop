@@ -5,20 +5,18 @@
 
 import { type Request, type Response } from 'express'
 import { RecycleModel } from '../models/recycle'
+import { asyncHandler } from '../lib/asyncHandler'
 
 import * as utils from '../lib/utils'
 
-export const getRecycleItem = () => (req: Request, res: Response) => {
-  RecycleModel.findAll({
+export const getRecycleItem = () => asyncHandler(async (req: Request, res: Response) => {
+  const Recycle = await RecycleModel.findAll({
     where: {
       id: JSON.parse(req.params.id)
     }
-  }).then((Recycle) => {
-    return res.send(utils.queryResultToJson(Recycle))
-  }).catch((_: unknown) => {
-    return res.send('Error fetching recycled items. Please try again')
   })
-}
+  res.send(utils.queryResultToJson(Recycle))
+})
 
 export const blockRecycleItems = () => (req: Request, res: Response) => {
   const errMsg = { err: 'Sorry, this endpoint is not supported.' }

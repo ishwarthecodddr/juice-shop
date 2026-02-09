@@ -3,13 +3,14 @@
  * SPDX-License-Identifier: MIT
  */
 
-import { type Request, type Response, type NextFunction } from 'express'
+import { type Request, type Response } from 'express'
 
 import { DeliveryModel } from '../models/delivery'
 import * as security from '../lib/insecurity'
+import { asyncHandler } from '../lib/asyncHandler'
 
 export function getDeliveryMethods () {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return asyncHandler(async (req: Request, res: Response) => {
     const methods = await DeliveryModel.findAll()
     if (methods) {
       const sendMethods = []
@@ -26,11 +27,11 @@ export function getDeliveryMethods () {
     } else {
       res.status(400).json({ status: 'error' })
     }
-  }
+  })
 }
 
 export function getDeliveryMethod () {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return asyncHandler(async (req: Request, res: Response) => {
     const method = await DeliveryModel.findOne({ where: { id: req.params.id } })
     if (method != null) {
       const sendMethod = {
@@ -44,5 +45,5 @@ export function getDeliveryMethod () {
     } else {
       res.status(400).json({ status: 'error' })
     }
-  }
+  })
 }
