@@ -14,6 +14,36 @@ const playbackDelays = {
   slower: 1.5
 }
 
+// Cache for solved challenge names
+let solvedChallengesCache: string[] | null = null
+
+/**
+ * Fetch and cache the list of solved challenges from the server.
+ * Call this before using isChallengeSolved.
+ */
+export async function loadSolvedChallenges (): Promise<void> {
+  try {
+    const res = await fetch('/api/Challenges/')
+    const json = await res.json()
+    solvedChallengesCache = json.data
+      .filter((challenge: any) => challenge.solved)
+      .map((challenge: any) => challenge.name)
+  } catch {
+    solvedChallengesCache = []
+  }
+}
+
+/**
+ * Check if a challenge has been solved by the current user.
+ * Uses the cached challenge data from the server.
+ */
+export function isChallengeSolved (challengeName: string): boolean {
+  if (solvedChallengesCache === null) {
+    return false // Cache not loaded yet, assume not solved
+  }
+  return solvedChallengesCache.includes(challengeName)
+}
+
 export async function sleep (timeInMs: number): Promise<void> {
   await new Promise((resolve) => {
     setTimeout(resolve, timeInMs)
